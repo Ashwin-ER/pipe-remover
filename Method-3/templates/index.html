@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Line Processor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 3rem; /* Increased padding */
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem; /* Increased font size */
+            font-weight: bold; /* Added bold weight */
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 1rem 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+            transform: scale(1.02); /* Added scale effect */
+        }
+
+        .upload-area p {
+            color: #4a5568;
+            margin: 1rem 0;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        #preview {
+            max-width: 100%;
+            margin-top: 1rem;
+            border-radius: 5px;
+            display: none;
+        }
+
+        #file-name {
+            color: #4a5568;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: none;
+            margin: 1rem auto;
+        }
+
+        .loading::after {
+            content: '';
+            display: block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image Line Processor</h1>
+        <form id="upload-form" action="/process" method="post" enctype="multipart/form-data">
+            <div class="upload-area" id="drop-area">
+                <p>Drag and drop your image here or click to select</p>
+                <input type="file" id="file-input" name="file" accept="image/*">
+                <button type="button" class="btn" onclick="document.getElementById('file-input').click()">
+                    Choose File
+                </button>
+            </div>
+            <div id="file-name"></div>
+            <img id="preview" src="#" alt="Preview">
+            <div class="loading" id="loading"></div>
+            <button type="submit" class="btn" id="submit-btn" disabled>Process Image</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-input');
+        const preview = document.getElementById('preview');
+        const fileName = document.getElementById('file-name');
+        const submitBtn = document.getElementById('submit-btn');
+        const loading = document.getElementById('loading');
+        const dropArea = document.getElementById('drop-area');
+
+        // Drag and drop functionality
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropArea.style.borderColor = '#667eea';
+            dropArea.style.background = '#f7fafc';
+        }
+
+        function unhighlight(e) {
+            dropArea.style.borderColor = '#cbd5e0';
+            dropArea.style.background = 'transparent';
+        }
+
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            handleFiles(files);
+        }
+
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        function handleFiles(files) {
+            if (files[0]) {
+                const file = files[0];
+                if (file.type.startsWith('image/')) {
+                    fileName.textContent = file.name;
+                    preview.style.display = 'block';
+                    preview.src = URL.createObjectURL(file);
+                    submitBtn.disabled = false;
+                } else {
+                    alert('Please upload an image file');
+                    fileInput.value = '';
+                    fileName.textContent = '';
+                    preview.style.display = 'none';
+                    submitBtn.disabled = true;
+                }
+            }
+        }
+
+        form.addEventListener('submit', function(e) {
+            loading.style.display = 'block';
+            submitBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>
